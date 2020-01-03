@@ -1,0 +1,13 @@
+[package]
+name = "winerror-rs"
+version = "0.1.0"
+authors = ["rafawo <rafawo1@hotmail.com>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+description = "Rust abstractions for windows error codes."
+repository = "https://github.com/rafawo/winerror-rs"
+readme = "README.md"
+keywords = ["windows"]
+categories = ["os::windows-apis"]
+
+[dependencies]
