@@ -1,7 +1,7 @@
 //! Rust abstractions of windows error code definitions for the Win32 API functions.
 //!
 //! Values are 32 bit values layed out as follows:
-//! <pre>
+//! ```text
 //!  3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
 //!  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
 //! +---+-+-+-----------------------+-------------------------------+
@@ -24,10 +24,10 @@
 //!     Facility - is the facility code
 //!
 //!     Code - is the facility's status code
-//! </pre>
+//! ```
 //!
 //! HRESULTs are 32 bit values layed out as follows:
-//! <pre>
+//! ```text
 //!  3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
 //!  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
 //! +-+-+-+-+-+---------------------+-------------------------------+
@@ -57,5 +57,7 @@
 //!     Facility - is the facility code
 //!
 //!     Code - is the facility's status code
-//! </pre>
+//! ```
 //!
+
+#![cfg_attr(not(feature = "std"), no_std)]

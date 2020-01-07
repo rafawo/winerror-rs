@@ -8,6 +8,9 @@ description = "Rust abstractions for windows error codes."
 repository = "https://github.com/rafawo/winerror-rs"
 readme = "README.md"
 keywords = ["windows"]
-categories = ["os::windows-apis"]
+categories = ["os::windows-apis", "nostd"]
+
+[features]
+std = []
 
 [dependencies]
