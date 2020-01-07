@@ -433,30 +433,53 @@ function New-ModRs
     $modrs = Join-Path -Path $Path -ChildPath "mod.rs"
     New-Item -ItemType File -Path $modrs -Force:$Force.IsPresent -ErrorAction Stop | Out-Null
 
-    "#[derive(Debug, Clone)]" >> $modrs
-    "pub enum Severity {" >> $modrs
+    Add-Content -Path $modrs -Value "#[derive(Debug, Clone)]`n"
+    Add-Content -Path $modrs -Value "pub enum Severity {"
 
     foreach ($severity in $McData.Severities.Values)
     {
-        "    Severity::$($severity.Name)," >> $modrs
+        Add-Content -Path $modrs -Value "    $($severity.Name),"
     }
 
-    "}" >> $modrs
-    "" >> $modrs
-    "impl Into<i32> for Severity {" >> $modrs
-    "    fn into(self) -> i32 {" >> $modrs
-    "        match self {" >> $modrs
+    Add-Content -Path $modrs -Value "}"
+    Add-Content -Path $modrs -Value ""
+    Add-Content -Path $modrs -Value "impl Into<i32> for Severity {"
+    Add-Content -Path $modrs -Value "    fn into(self) -> i32 {"
+    Add-Content -Path $modrs -Value "        match self {"
 
     foreach ($severity in $McData.Severities.Values)
     {
-        "            Severity::$($severity.Name) => $($severity.Value)," >> $modrs
+        Add-Content -Path $modrs -Value "            Severity::$($severity.Name) => 0x$('{0:X}' -f $severity.Value),"
     }
 
-    "        }" >> $modrs
-    "    }" >> $modrs
-    "}" >> $modrs
+    Add-Content -Path $modrs -Value "        }"
+    Add-Content -Path $modrs -Value "    }"
+    Add-Content -Path $modrs -Value "}"
 
-    "" >> $modrs
+    Add-Content -Path $modrs -Value ""
+
+    Add-Content -Path $modrs -Value "#[derive(Debug, Clone)]"
+    Add-Content -Path $modrs -Value "pub enum Facility {"
+
+    foreach ($facility in $McData.Facilities.Values)
+    {
+        Add-Content -Path $modrs -Value "    $($facility.Name),"
+    }
+
+    Add-Content -Path $modrs -Value "}"
+    Add-Content -Path $modrs -Value ""
+    Add-Content -Path $modrs -Value "impl Into<i32> for Facility {"
+    Add-Content -Path $modrs -Value "    fn into(self) -> i32 {"
+    Add-Content -Path $modrs -Value "        match self {"
+
+    foreach ($facility in $McData.Facilities.Values)
+    {
+        Add-Content -Path $modrs -Value "            Facility::$($facility.Name) => 0x$('{0:X}' -f $facility.Value),"
+    }
+
+    Add-Content -Path $modrs -Value "        }"
+    Add-Content -Path $modrs -Value "    }"
+    Add-Content -Path $modrs -Value "}"
 }
 
 Export-ModuleMember *-*
