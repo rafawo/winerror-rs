@@ -512,9 +512,32 @@ function New-ModRs
             Add-Content -Path $modrs -Value "    /// $line"
         }
 
-        Add-Content -Path $modrs -Value "    $($errorcode.SymbolicName) = $('0x{0:X16}' -f $errorcode.Value()),"
+        Add-Content -Path $modrs -Value "    $($errorcode.SymbolicName) = $('0x{0:X8}' -f $errorcode.Value()),"
     }
 
+    Add-Content -Path $modrs -Value "    /// Unknown error code, does not correspond to a valid value"
+    Add-Content -Path $modrs -Value "    UNKNOWN_ERROR_CODE = 0xFFFFFFFF,"
+    Add-Content -Path $modrs -Value "}"
+    Add-Content -Path $modrs -Value ""
+    Add-Content -Path $modrs -Value "impl Into<i32> for ErrorCode {"
+    Add-Content -Path $modrs -Value "    fn into(self) -> i32 {"
+    Add-Content -Path $modrs -Value "        self as i32"
+    Add-Content -Path $modrs -Value "    }"
+    Add-Content -Path $modrs -Value "}"
+    Add-Content -Path $modrs -Value ""
+    Add-Content -Path $modrs -Value "#[allow(overflowing_literals)]"
+    Add-Content -Path $modrs -Value "impl From<i32> for ErrorCode {"
+    Add-Content -Path $modrs -Value "    fn from(value: i32) -> ErrorCode {"
+    Add-Content -Path $modrs -Value "        match value {"
+
+    foreach ($errorcode in $McData.ErrorCodes)
+    {
+        Add-Content -Path $modrs -Value "            $('0x{0:X16}' -f $errorcode.Value()) => ErrorCode::$($errorcode.SymbolicName),"
+    }
+
+    Add-Content -Path $modrs -Value "            _ => ErrorCode::UNKNOWN_ERROR_CODE,"
+    Add-Content -Path $modrs -Value "        }"
+    Add-Content -Path $modrs -Value "    }"
     Add-Content -Path $modrs -Value "}"
 }
 
