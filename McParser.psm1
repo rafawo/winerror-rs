@@ -174,6 +174,20 @@ class McData
         }
     }
 
+    [void] AddErrorCode([ErrorCode] $ErrorCode)
+    {
+        for ($i = 0; $i -lt $this.ErrorCodes.Count; ++$i)
+        {
+            if ($this.ErrorCodes[$i].SymbolicName -eq $ErrorCode.SymbolicName)
+            {
+                $this.ErrorCodes[$i] = $ErrorCode
+                return;
+            }
+        }
+
+        $this.ErrorCodes.Add($ErrorCode)
+    }
+
     [int32] DefaultSeverityValue()
     {
         if (($null -ne $this.OrderedListOfSeverities) -and ($this.OrderedListOfSeverities.Count -ge 1))
@@ -394,7 +408,7 @@ function ConvertTo-McData
         while (($i -lt $content.Count) -and !((CleanupLine $content[$i]) -eq '.')) { $message += $content[$i++] }
 
         $errorCode.SetMessage($message)
-        $data.ErrorCodes.Add($errorCode)
+        $data.AddErrorCode($errorCode)
 
         $i++
     }
@@ -433,7 +447,8 @@ function New-ModRs
     $modrs = Join-Path -Path $Path -ChildPath "mod.rs"
     New-Item -ItemType File -Path $modrs -Force:$Force.IsPresent -ErrorAction Stop | Out-Null
 
-    Add-Content -Path $modrs -Value "#[derive(Debug, Clone)]`n"
+    Add-Content -Path $modrs -Value "#[allow(non_camel_case_types)]"
+    Add-Content -Path $modrs -Value "#[derive(Debug, Clone)]"
     Add-Content -Path $modrs -Value "pub enum Severity {"
 
     foreach ($severity in $McData.Severities.Values)
@@ -449,7 +464,7 @@ function New-ModRs
 
     foreach ($severity in $McData.Severities.Values)
     {
-        Add-Content -Path $modrs -Value "            Severity::$($severity.Name) => 0x$('{0:X}' -f $severity.Value),"
+        Add-Content -Path $modrs -Value "            Severity::$($severity.Name) => $('0x{0:X}' -f $severity.Value),"
     }
 
     Add-Content -Path $modrs -Value "        }"
@@ -458,6 +473,7 @@ function New-ModRs
 
     Add-Content -Path $modrs -Value ""
 
+    Add-Content -Path $modrs -Value "#[allow(non_camel_case_types)]"
     Add-Content -Path $modrs -Value "#[derive(Debug, Clone)]"
     Add-Content -Path $modrs -Value "pub enum Facility {"
 
@@ -474,11 +490,31 @@ function New-ModRs
 
     foreach ($facility in $McData.Facilities.Values)
     {
-        Add-Content -Path $modrs -Value "            Facility::$($facility.Name) => 0x$('{0:X}' -f $facility.Value),"
+        Add-Content -Path $modrs -Value "            Facility::$($facility.Name) => $('0x{0:X}' -f $facility.Value),"
     }
 
     Add-Content -Path $modrs -Value "        }"
     Add-Content -Path $modrs -Value "    }"
+    Add-Content -Path $modrs -Value "}"
+
+    Add-Content -Path $modrs -Value ""
+
+    Add-Content -Path $modrs -Value "#[repr(i32)]"
+    Add-Content -Path $modrs -Value "#[allow(overflowing_literals)]"
+    Add-Content -Path $modrs -Value "#[allow(non_camel_case_types)]"
+    Add-Content -Path $modrs -Value "#[derive(Debug, Clone)]"
+    Add-Content -Path $modrs -Value "pub enum ErrorCode {"
+
+    foreach ($errorcode in $McData.ErrorCodes)
+    {
+        foreach ($line in $errorcode.Message)
+        {
+            Add-Content -Path $modrs -Value "    /// $line"
+        }
+
+        Add-Content -Path $modrs -Value "    $($errorcode.SymbolicName) = $('0x{0:X16}' -f $errorcode.Value()),"
+    }
+
     Add-Content -Path $modrs -Value "}"
 }
 
