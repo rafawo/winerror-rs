@@ -226,8 +226,9 @@ class McData
 #>
 function ConvertTo-McData
 {
+    [CmdletBinding()]
     param(
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory=$true,ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         [string] $McFilePath
     )
@@ -399,6 +400,63 @@ function ConvertTo-McData
     }
 
     return $data
+}
+
+<#
+.SYNOPSIS
+    Generates rust code for the supplied MC data.
+
+.DESCRIPTION
+    Generates rust code for the supplied MC data.
+    The generated rust is assumed to be a module, and as such creates a mod.rs file
+    in the supplied directory.
+
+.PARAMETER McData
+    Supplies the in-memory representation of a .mc file, extracted from running ConvertTo-McData
+
+.PARAMETER Path
+    Supplies the parent path where the mod.rs file will be generated.
+#>
+function New-ModRs
+{
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory=$true,ValueFromPipeline=$true)]
+        [McData] $McData,
+
+        [ValidateNotNullOrEmpty()]
+        [string] $Path = (Get-Location),
+
+        [switch] $Force
+    )
+
+    $modrs = Join-Path -Path $Path -ChildPath "mod.rs"
+    New-Item -ItemType File -Path $modrs -Force:$Force.IsPresent -ErrorAction Stop | Out-Null
+
+    "#[derive(Debug, Clone)]" >> $modrs
+    "pub enum Severity {" >> $modrs
+
+    foreach ($severity in $McData.Severities.Values)
+    {
+        "    Severity::$($severity.Name)," >> $modrs
+    }
+
+    "}" >> $modrs
+    "" >> $modrs
+    "impl Into<i32> for Severity {" >> $modrs
+    "    fn into(self) -> i32 {" >> $modrs
+    "        match self {" >> $modrs
+
+    foreach ($severity in $McData.Severities.Values)
+    {
+        "            Severity::$($severity.Name) => $($severity.Value)," >> $modrs
+    }
+
+    "        }" >> $modrs
+    "    }" >> $modrs
+    "}" >> $modrs
+
+    "" >> $modrs
 }
 
 Export-ModuleMember *-*
